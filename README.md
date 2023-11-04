@@ -1,6 +1,8 @@
 # crep - like grep but for code
 
-**What is it?** If grep and etags had a baby.
+## What is crep?
+
+If grep and etags had a baby.
 
 Note: you should use ctags or etags. Seriously. This is an experimental thingy.
 
