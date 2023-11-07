@@ -1,0 +1,2 @@
+-std=c99
+-I./vendor/tree-sitter/lib/include
