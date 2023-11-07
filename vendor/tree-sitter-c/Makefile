@@ -4,7 +4,7 @@ VERSION := 0.19.0
 SRC_DIR := src
 
 PARSER_REPO_URL := $(shell git -C $(SRC_DIR) remote get-url origin )
-PARSER_NAME := json
+PARSER_NAME := c
 
 ifeq (, $(PARSER_URL))
 	PARSER_URL := $(subst :,/,$(PARSER_REPO_URL))
