@@ -12,6 +12,7 @@ Note: you should use ctags or etags. Seriously. This is an experimental thingy.
 ## Additional resources
 
 - https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore_string-search_algorithm
+- https://en.wikipedia.org/wiki/Levenshtein_distance
 - https://github.com/tree-sitter/tree-sitter
 - https://tree-sitter.github.io/tree-sitter/playground
 - https://dreampuf.github.io/GraphvizOnline/
