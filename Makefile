@@ -3,7 +3,7 @@ SOURCES = $(wildcard *.c)
 TS_ALIBS = $(shell find vendor -name "*.a" -print)
 VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -ggdb -O3
-LIBS = -I./vendor/tree-sitter/lib/include
+LIBS = -I./vendor/tree-sitter/lib/include -lpthread
 
 $(info VENDOR_DIRS: $(VENDOR_DIRS))
 $(info SOURCES: $(SOURCES))

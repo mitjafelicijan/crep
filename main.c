@@ -1,11 +1,13 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <tree_sitter/api.h>
 
 #include "file.h"
+#include "list.h"
 
 #define DEBUG 1
 
@@ -30,7 +32,41 @@ const char *extract_value(TSNode captured_node, const char *source_code) {
   return NULL;
 }
 
-void parse_source_file(const char *file_path, const char *source_code, TSLanguage *language) {
+char* remove_newlines(const char* str) {
+  size_t length = strlen(str);
+  char* result = (char*)malloc(length + 1);  // +1 for the null terminator
+  if (result == NULL) {
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(1);
+  }
+
+  size_t j = 0;
+  for (size_t i = 0; i < length; i++) {
+    if (str[i] != '\n') {
+      result[j++] = str[i];
+    }
+  }
+
+  result[j] = '\0';
+  return result;
+}
+
+struct ThreadArgs {
+  const char* file_path;
+  const char* source_code;
+  TSLanguage* language;
+  const char* cfname;
+};
+
+// void parse_source_file(const char *file_path, const char *source_code, TSLanguage *language, const char *cfname) {
+void *parse_source_file(void *arg) {
+  struct ThreadArgs* args = (struct ThreadArgs*)arg;
+
+  const char *file_path = args->file_path;
+  const char *source_code = args->source_code;
+  TSLanguage *language = args->language;
+  const char *cfname = args->cfname;
+
   TSParser *parser = ts_parser_new();
   ts_parser_set_language(parser, language);
 
@@ -55,8 +91,6 @@ void parse_source_file(const char *file_path, const char *source_code, TSLanguag
         TSQueryCapture capture = match.captures[i];
         TSNode captured_node = capture.node;
 
-        /* fprintf(stderr, "Query: %p, Capture index: %u\n", (void *)query, capture.index); */
-
         uint32_t capture_name_length;
         const char *capture_name = ts_query_capture_name_for_id(query, capture.index, &capture_name_length);
 
@@ -76,7 +110,17 @@ void parse_source_file(const char *file_path, const char *source_code, TSLanguag
         }
       }
 
-      printf("%s:%zu\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fn.fparams);
+      // Full matching.
+      /* if (strcmp(fn.fname, cfname) == 0) { */
+      /*   printf("%s:%zu\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fn.fparams); */
+      /* } */
+
+      // Substring matching.
+      char *result = strstr(fn.fname, cfname);
+      if (result != NULL) {
+        char *fparams_formatted = remove_newlines(fn.fparams);
+        printf("%s:%zu\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fparams_formatted);
+      }
     }
   } else {
     if (DEBUG) {
@@ -88,6 +132,8 @@ void parse_source_file(const char *file_path, const char *source_code, TSLanguag
   ts_query_delete(query);
   ts_tree_delete(tree);
   ts_parser_delete(parser);
+
+  return NULL;
 }
 
 const char *get_file_extension(const char *file_path) {
@@ -98,45 +144,70 @@ const char *get_file_extension(const char *file_path) {
   return NULL;
 }
 
-int main(void) {
-  const char *file_path = "examples/cmdline.c";
-  /* const char *file_path = "examples/tabs.py"; */
-  const char *extension = get_file_extension(file_path);
+int main(int argc, char *argv[]) {
+  if (argc < 2) {
+    printf("Usage: %s <argument>\n", argv[0]);
+    return 1;
+  }
+
+  char *cfname = argv[1];
 
   TSLanguage *tree_sitter_c(void);
   TSLanguage *tree_sitter_python(void);
 
-  struct FileContent source_file = read_entire_file(file_path);
-  if (source_file.content != NULL) {
-    if (DEBUG) {
-      /* fprintf(stdout, "File contents:\n%s\n", source_file.content); */
-      /* fprintf(stdout, "Count of characters: %zu\n", source_file.count); */
-    }
+  Node *head = NULL;
+  list_files_recursively("./examples", &head);
+  int list_size = size_of_file_list(head);
+  /* pthread_t threads[list_size]; */
 
-    if (extension != NULL) {
-      if (DEBUG) {
-        fprintf(stdout, "File extension: %s\n", extension);
-      }
+  printf("size: %d\n", list_size);
 
-      if (strcmp(extension, "c") == 0) {
-        parse_source_file(file_path, source_file.content, tree_sitter_c());
-      }
+  Node *current = head;
+  int thread_index = 0;
+  while (current != NULL) {
+    const char *file_path = current->file_path;
+    const char *extension = get_file_extension(file_path);
+    struct FileContent source_file = read_entire_file(file_path);
 
-      if (strcmp(extension, "py") == 0) {
-        parse_source_file(file_path, source_file.content, tree_sitter_python());
+    if (source_file.content != NULL) {
+      if (extension != NULL) {
+        if (strcmp(extension, "c") == 0 || strcmp(extension, "h") == 0) {
+          /* parse_source_file(file_path, source_file.content, tree_sitter_c(), cfname); */
+
+          struct ThreadArgs thread_args;
+          thread_args.file_path = file_path;
+          thread_args.source_code = source_file.content;
+          thread_args.language = tree_sitter_c();
+          thread_args.cfname = cfname;
+
+          parse_source_file(&thread_args);
+
+          /* printf("> creating thread #%d\n", thread_index); */
+          /* if (pthread_create(&threads[thread_index], NULL, parse_source_file, &thread_args) != 0) { */
+          /*   fprintf(stderr, "Error creating thread %d\n", thread_index); */
+          /*   return 1; */
+          /* } */
+        }
       }
+      free((void *)source_file.content);
     } else {
       if (DEBUG) {
-        fprintf(stderr,"No file extension found.\n");
+        fprintf(stderr, "Failed to read file.\n");
       }
     }
-
-    free((void *)source_file.content);
-  } else {
-    if (DEBUG) {
-      fprintf(stderr, "Failed to read file.\n");
-    }
+    current = current->next;
+    thread_index++;
   }
 
+  // Collecting threads.
+  /* for (int i = 0; i < list_size; i++) { */
+  /*   printf("> collecting thread #%d\n", thread_index); */
+  /*   if (pthread_join(threads[i], NULL) != 0) { */
+  /*     fprintf(stderr, "Error joining thread %d\n", i); */
+  /*     return 1; */
+  /*   } */
+  /* } */
+
+  free_file_list(head);
   return 0;
 }
