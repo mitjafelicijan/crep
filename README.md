@@ -2,9 +2,8 @@
 
 ## What is crep?
 
-If grep and etags had a baby.
-
-Note: you should use ctags or etags. Seriously. This is an experimental thingy.
+If grep and etags had a baby. You should use ctags or etags. Seriously. This is
+an experimental thingy.
 
 - https://en.wikipedia.org/wiki/Ctags
 - https://www.emacswiki.org/emacs/TagsFile

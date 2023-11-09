@@ -1,3 +1,13 @@
+// IMMEDIATE TODO & IDEAS:
+//  - Add language specific filter (by default all but it can also passed
+//    with -lpy -lc -lrb) which would only parse python, c and ruby files.
+//  - By default its case insensitive but with passing -cs it tells that
+//    all matching should be done in case sensitive way.
+//  - Add pthreads and check how grep does it's magic.
+//  - Add Levenshtein distance for matching and expose distance as arg with
+//    something like -d5 which would allow distance of 5 on a match.
+//  - Allow DEBUG to be provided as environmental variable.
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
