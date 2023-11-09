@@ -110,16 +110,12 @@ void *parse_source_file(void *arg) {
         }
       }
 
-      // Full matching.
-      /* if (strcmp(fn.fname, cfname) == 0) { */
-      /*   printf("%s:%zu\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fn.fparams); */
-      /* } */
-
       // Substring matching.
+      // FIXME: Add Levenshtein distance.
       char *result = strstr(fn.fname, cfname);
       if (result != NULL) {
         char *fparams_formatted = remove_newlines(fn.fparams);
-        printf("%s:%zu\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fparams_formatted);
+        printf("%s:%zu:\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fparams_formatted);
       }
     }
   } else {
@@ -145,22 +141,25 @@ const char *get_file_extension(const char *file_path) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    printf("Usage: %s <argument>\n", argv[0]);
+  if (argc < 3) {
+    printf("Usage: %s <search term> <directory>\n", argv[0]);
     return 1;
   }
 
   char *cfname = argv[1];
+  char *directory = argv[2];
 
   TSLanguage *tree_sitter_c(void);
   TSLanguage *tree_sitter_python(void);
 
   Node *head = NULL;
-  list_files_recursively("./examples", &head);
+  list_files_recursively(directory, &head);
   int list_size = size_of_file_list(head);
   /* pthread_t threads[list_size]; */
 
-  printf("size: %d\n", list_size);
+  if (DEBUG) {
+    printf("Scanning %d files\n", list_size);
+  }
 
   Node *current = head;
   int thread_index = 0;
