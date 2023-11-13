@@ -29,5 +29,8 @@ ts-clean:
 valgrind:
 	valgrind -s --leak-check=full ./$(TARGET)
 
+format:
+	clang-format -i --style=Chromium *.c *.h
+
 clean:
 	rm -f *.o $(TARGET) callgrind.out.*
