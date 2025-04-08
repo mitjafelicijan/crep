@@ -18,7 +18,7 @@ ts-build:
 	-cd vendor/tree-sitter && make -B
 	-cd vendor/tree-sitter-c && make -B
 	-cd vendor/tree-sitter-python && make -B
-	-cd vendor/tree-sitter-json && make -B
+	# -cd vendor/tree-sitter-json && make -B
 
 ts-clean:
 	-cd vendor/tree-sitter && make clean
