@@ -1,13 +1,15 @@
-// IMMEDIATE TODO & IDEAS:
+// TODO:
 //  - Add language specific filter (by default all but it can also passed
 //    with -tpy -tc -trb) which would only parse python, c and ruby files.
 //  - By default its case insensitive but with passing -cs it tells that
 //    all matching should be done in case sensitive way.
-//  - Add pthreads and check how grep does it's magic.
 //  - Add Levenshtein distance for matching and expose distance as arg with
 //    something like -d5 which would allow distance of 5 on a match.
 //  - Allow DEBUG to be provided as environmental variable.
 //  - Added depth flag (-r means recursive, -l2 means 2 levels deep).
+
+// FIXME:
+//  - Truncate longer argument list.
 
 #include <assert.h>
 #include <pthread.h>
@@ -22,14 +24,18 @@
 #include "tpool.h"
 
 #include "queries/c.h"
-#include "queries/python.h"
+#include "queries/go.h"
 #include "queries/php.h"
+#include "queries/python.h"
+#include "queries/rust.h"
 
-#define DEBUG 0
+int debug_enabled = 0;
 
 TSLanguage *tree_sitter_c(void);
+TSLanguage *tree_sitter_go(void);
 TSLanguage *tree_sitter_python(void);
 TSLanguage *tree_sitter_php(void);
+TSLanguage *tree_sitter_rust(void);
 
 typedef struct {
 	const char *fname;
@@ -98,10 +104,9 @@ void parse_source_file(void *arg) {
 	TSParser *parser = ts_parser_new();
 	ts_parser_set_language(parser, language);
 
-	TSTree *tree =
-		ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
+	TSTree *tree = ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 	if (tree == NULL) {
-		if (DEBUG) {
+		if (debug_enabled) {
 			fprintf(stderr, "Parsing failed for file: %s\n", file_path);
 		}
 		ts_parser_delete(parser);
@@ -119,7 +124,7 @@ void parse_source_file(void *arg) {
 	TSQuery *query = ts_query_new(language, query_string, query_len, &error_offset, &error_type);
 
 	if (query == NULL) {
-		if (DEBUG) {
+		if (debug_enabled) {
 			printf("Query creation failed at offset %u with error type %d\n", error_offset, error_type);
 		}
 		ts_tree_delete(tree);
@@ -136,46 +141,46 @@ void parse_source_file(void *arg) {
 	while (ts_query_cursor_next_match(query_cursor, &match)) {
 		Function fn = {0};
 
-			for (unsigned i = 0; i < match.capture_count; i++) {
-				TSQueryCapture capture = match.captures[i];
-				TSNode captured_node = capture.node;
+		for (unsigned i = 0; i < match.capture_count; i++) {
+			TSQueryCapture capture = match.captures[i];
+			TSNode captured_node = capture.node;
 
-				uint32_t capture_name_length;
-				const char *capture_name = ts_query_capture_name_for_id(
-					query, capture.index, &capture_name_length);
+			uint32_t capture_name_length;
+			const char *capture_name = ts_query_capture_name_for_id(
+				query, capture.index, &capture_name_length);
 
-				if (strcmp(capture_name, "fname") == 0) {
-					fn.fname = extract_value(captured_node, source_code);
+			if (strcmp(capture_name, "fname") == 0) {
+				fn.fname = extract_value(captured_node, source_code);
 
-					TSPoint start_point = ts_node_start_point(captured_node);
-					fn.lineno = start_point.row + 1;
-				}
-
-				if (strcmp(capture_name, "ftype") == 0) {
-					fn.ftype = extract_value(captured_node, source_code);
-				}
-
-				if (strcmp(capture_name, "fparams") == 0) {
-					fn.fparams = extract_value(captured_node, source_code);
-				}
+				TSPoint start_point = ts_node_start_point(captured_node);
+				fn.lineno = start_point.row + 1;
 			}
 
-			// Substring matching.
-			// FIXME: Add Levenshtein distance.
-			if (fn.fname != NULL) {
-				char *result = strstr(fn.fname, cfname);
-				if (result != NULL) {
-					char *fparams_formatted = remove_newlines(fn.fparams);
-					printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
-					free(fparams_formatted);
-				}
+			if (strcmp(capture_name, "ftype") == 0) {
+				fn.ftype = extract_value(captured_node, source_code);
 			}
 
-			// Free captured values
-			free((void *)fn.fname);
-			free((void *)fn.ftype);
-			free((void *)fn.fparams);
+			if (strcmp(capture_name, "fparams") == 0) {
+				fn.fparams = extract_value(captured_node, source_code);
+			}
 		}
+
+		// Substring matching.
+		// FIXME: Add Levenshtein distance.
+		if (fn.fname != NULL) {
+			char *result = strstr(fn.fname, cfname);
+			if (result != NULL) {
+				char *fparams_formatted = remove_newlines(fn.fparams);
+				printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
+				free(fparams_formatted);
+			}
+		}
+
+		// Free captured values
+		free((void *)fn.fname);
+		free((void *)fn.ftype);
+		free((void *)fn.fparams);
+	}
 
 	ts_query_cursor_delete(query_cursor);
 	ts_query_delete(query);
@@ -208,7 +213,12 @@ int main(int argc, char *argv[]) {
 	list_files_recursively(directory, &head);
 	int list_size = size_of_file_list(head);
 
-	if (DEBUG) {
+	const char *debug_env = getenv("DEBUG");
+	if (debug_env != NULL && (strcmp(debug_env, "1") == 0 || strcmp(debug_env, "true") == 0)) {
+		debug_enabled = 1;
+	}
+
+	if (debug_enabled) {
 		printf("Scanning %d files\n", list_size);
 	}
 
@@ -232,6 +242,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_c();
 				query_string = (const char *)query_c;
 				query_len = query_c_len;
+			} else if (strcmp(extension, "go") == 0) {
+				lang = tree_sitter_go();
+				query_string = (const char *)query_go;
+				query_len = query_go_len;
 			} else if (strcmp(extension, "py") == 0) {
 				lang = tree_sitter_python();
 				query_string = (const char *)query_python;
@@ -240,6 +254,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_php();
 				query_string = (const char *)query_php;
 				query_len = query_php_len;
+			} else if (strcmp(extension, "rs") == 0) {
+				lang = tree_sitter_rust();
+				query_string = (const char *)query_rust;
+				query_len = query_rust_len;
 			}
 		}
 
@@ -262,7 +280,7 @@ int main(int argc, char *argv[]) {
 
 				tp_add_job(pool, (thread_func_t)parse_source_file, thread_args);
 			} else {
-				if (DEBUG) {
+				if (debug_enabled) {
 					fprintf(stderr, "Failed to read file: %s\n", file_path);
 				}
 			}

@@ -1,0 +1,5 @@
+(function_declaration "func" @ftype name: (identifier) @fname parameters: (parameter_list) @fparams)
+(method_declaration "func" @ftype receiver: (parameter_list) @fparams name: (field_identifier) @fname)
+(type_declaration "type" @ftype (type_spec name: (type_identifier) @fname type: (struct_type) @fparams))
+(type_declaration "type" @ftype (type_spec name: (type_identifier) @fname type: (interface_type) @fparams))
+(const_declaration "const" @ftype (const_spec name: (identifier) @fname))

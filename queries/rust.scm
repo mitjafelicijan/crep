@@ -1,0 +1,5 @@
+(function_item "fn" @ftype name: (identifier) @fname parameters: (parameters) @fparams)
+(struct_item "struct" @ftype name: (type_identifier) @fname)
+(enum_item "enum" @ftype name: (type_identifier) @fname)
+(const_item "const" @ftype name: (identifier) @fname)
+(trait_item "trait" @ftype name: (type_identifier) @fname)
