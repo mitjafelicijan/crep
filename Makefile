@@ -1,3 +1,5 @@
+.PHONY: all query ts-build ts-clean valgrind tests format clean
+
 TARGET = crep
 SOURCES = $(wildcard *.c *.h)
 TS_ALIBS = $(shell find vendor -name "*.a" -print)
@@ -41,6 +43,9 @@ ts-clean:
 
 valgrind:
 	valgrind -s --leak-check=full ./$(TARGET)
+
+tests: $(TARGET)
+	sh tests.sh
 
 format:
 	clang-format -i *.c *.h

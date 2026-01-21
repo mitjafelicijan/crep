@@ -1,0 +1,73 @@
+#!/bin/bash
+
+CREP="./crep"
+TEST_DIR="tests"
+
+if [ ! -f "$CREP" ]; then
+    echo "Error: crep binary not found. Please run 'make' first."
+    exit 1
+fi
+
+failed=0
+
+run_test() {
+    local label=$1
+    local search_term=$2
+    local file=$3
+    local expected_pattern=$4
+
+    printf "Testing %-50s " "$label ($search_term)"
+    output=$($CREP "$search_term" "$file")
+    
+    if echo "$output" | grep -q "$expected_pattern"; then
+        echo "PASSED"
+    else
+        echo "FAILED"
+        echo "  Expected pattern: $expected_pattern"
+        echo "  Actual output: $output"
+        failed=$((failed + 1))
+    fi
+}
+
+echo "Starting tests..."
+echo "----------------"
+
+# C Tests
+run_test "C Function" "hello" "$TEST_DIR/test.c" "void hello ()"
+run_test "C Params" "add" "$TEST_DIR/test.c" "int add (int a, int b)"
+run_test "C Pointer" "get_pointer" "$TEST_DIR/test.c" "int get_pointer (int\* x)"
+run_test "C Proto" "declared_only" "$TEST_DIR/test.c" "void declared_only (int x)"
+
+# Python Tests
+run_test "Python Func" "hello" "$TEST_DIR/test.py" "def hello ()"
+run_test "Python Params" "add" "$TEST_DIR/test.py" "def add (a, b)"
+run_test "Python Complex" "complex_function" "$TEST_DIR/test.py" "def complex_function (a, b, c=None, \*args, \*\*kwargs)"
+run_test "Python Method" "method_one" "$TEST_DIR/test.py" "def method_one (self)"
+
+# PHP Tests
+run_test "PHP Func" "simple_function" "$TEST_DIR/test.php" "function simple_function"
+run_test "PHP Method" "myMethod" "$TEST_DIR/test.php" "function myMethod"
+run_test "PHP Class" "MyClass" "$TEST_DIR/test.php" "class MyClass"
+run_test "PHP Const" "GLOBAL_CONST" "$TEST_DIR/test.php" "GLOBAL_CONST = 1"
+
+# Rust Tests
+run_test "Rust Func" "add" "$TEST_DIR/test.rs" "fn add (a: i32, b: i32)"
+run_test "Rust Struct" "Point" "$TEST_DIR/test.rs" "struct Point"
+run_test "Rust Enum" "Direction" "$TEST_DIR/test.rs" "enum Direction"
+run_test "Rust Trait" "Describe" "$TEST_DIR/test.rs" "trait Describe"
+
+# Go Tests
+run_test "Go Func" "Hello" "$TEST_DIR/test.go" "func Hello ()"
+run_test "Go Method" "Describe" "$TEST_DIR/test.go" "func Describe (p Point)"
+run_test "Go Struct" "Point" "$TEST_DIR/test.go" "type Point struct"
+run_test "Go Interface" "Describer" "$TEST_DIR/test.go" "type Describer interface"
+run_test "Go Const" "MaxValue" "$TEST_DIR/test.go" "const MaxValue"
+
+echo "----------------"
+if [ $failed -eq 0 ]; then
+    echo "All tests passed!"
+    exit 0
+else
+    echo "$failed tests failed."
+    exit 1
+fi
