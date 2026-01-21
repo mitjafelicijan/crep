@@ -1,5 +1,5 @@
 TARGET = crep
-SOURCES = $(wildcard *.c)
+SOURCES = $(wildcard *.c *.h)
 TS_ALIBS = $(shell find vendor -name "*.a" -print)
 VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -ggdb -O3
