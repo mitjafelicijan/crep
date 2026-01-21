@@ -21,6 +21,9 @@
 #include "list.h"
 #include "tpool.h"
 
+#include "queries/c.h"
+#include "queries/python.h"
+
 #define DEBUG 0
 
 typedef struct {
@@ -72,6 +75,8 @@ struct ThreadArgs {
 	const char *file_path;
 	const char *source_code;
 	TSLanguage *language;
+	const char *query_string;
+	uint32_t query_len;
 	const char *cfname;
 };
 
@@ -92,15 +97,12 @@ void parse_source_file(void *arg) {
 		ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
 	TSNode root_node = ts_tree_root_node(tree);
 
-	const char *query_string =
-		"(function_definition type: (_) @ftype declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams))"
-		"(function_definition type: (_) @ftype declarator: (pointer_declarator declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams)))"
-		"(declaration type: (_) @ftype declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams))"
-		"(declaration type: (_) @ftype declarator: (pointer_declarator declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams)))";
+	const char *query_string = args->query_string;
+	uint32_t query_len = args->query_len;
 
 	uint32_t error_offset;
 	TSQueryError error_type;
-	TSQuery *query = ts_query_new(language, query_string, strlen(query_string), &error_offset, &error_type);
+	TSQuery *query = ts_query_new(language, query_string, query_len, &error_offset, &error_type);
 
 	TSQueryCursor *query_cursor = ts_query_cursor_new();
 	ts_query_cursor_exec(query_cursor, query, root_node);
@@ -122,7 +124,7 @@ void parse_source_file(void *arg) {
 					fn.fname = extract_value(captured_node, source_code);
 
 					TSPoint start_point = ts_node_start_point(captured_node);
-					fn.lineno = start_point.row;
+					fn.lineno = start_point.row + 1;
 				}
 
 				if (strcmp(capture_name, "ftype") == 0) {
@@ -140,7 +142,7 @@ void parse_source_file(void *arg) {
 				char *result = strstr(fn.fname, cfname);
 				if (result != NULL) {
 					char *fparams_formatted = remove_newlines(fn.fparams);
-					printf("%s:%zu:\t%s %s %s\n", file_path, fn.lineno, fn.ftype, fn.fname, fparams_formatted);
+					printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
 					free(fparams_formatted);
 				}
 			}
@@ -205,7 +207,23 @@ int main(int argc, char *argv[]) {
 		const char *file_path = current->file_path;
 		const char *extension = get_file_extension(file_path);
 
-		if (extension != NULL && (strcmp(extension, "c") == 0 || strcmp(extension, "h") == 0)) {
+		TSLanguage *lang = NULL;
+		const char *query_string = NULL;
+		uint32_t query_len = 0;
+
+		if (extension != NULL) {
+			if (strcmp(extension, "c") == 0 || strcmp(extension, "h") == 0) {
+				lang = tree_sitter_c();
+				query_string = (const char *)query_c;
+				query_len = query_c_len;
+			} else if (strcmp(extension, "py") == 0) {
+				lang = tree_sitter_python();
+				query_string = (const char *)query_python;
+				query_len = query_python_len;
+			}
+		}
+
+		if (lang != NULL && query_string != NULL) {
 			struct FileContent source_file = read_entire_file(file_path);
 			if (source_file.content != NULL) {
 				struct ThreadArgs *thread_args = malloc(sizeof(struct ThreadArgs));
@@ -217,7 +235,9 @@ int main(int argc, char *argv[]) {
 
 				thread_args->file_path = file_path;
 				thread_args->source_code = source_file.content;
-				thread_args->language = tree_sitter_c();
+				thread_args->language = lang;
+				thread_args->query_string = query_string;
+				thread_args->query_len = query_len;
 				thread_args->cfname = cfname;
 
 				tp_add_job(pool, (thread_func_t)parse_source_file, thread_args);

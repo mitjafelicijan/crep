@@ -1,0 +1,1 @@
+(function_definition "def" @ftype name: (identifier) @fname parameters: (parameters) @fparams)

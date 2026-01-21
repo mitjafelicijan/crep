@@ -1,0 +1,4 @@
+(function_definition type: (_) @ftype declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams))
+(function_definition type: (_) @ftype declarator: (pointer_declarator declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams)))
+(declaration type: (_) @ftype declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams))
+(declaration type: (_) @ftype declarator: (pointer_declarator declarator: (function_declarator declarator: (identifier) @fname parameters: (parameter_list) @fparams)))
