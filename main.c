@@ -177,13 +177,13 @@ const char *get_file_extension(const char *file_path) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 3) {
-		printf("Usage: %s <search term> <directory>\n", argv[0]);
+	if (argc < 2) {
+		printf("Usage: %s <search term> [directory|file]\n", argv[0]);
 		return 1;
 	}
 
 	const char *cfname = argv[1];
-	char *directory = argv[2];
+	char *directory = (argc > 2) ? argv[2] : ".";
 
 	TSLanguage *tree_sitter_c(void);
 	TSLanguage *tree_sitter_python(void);

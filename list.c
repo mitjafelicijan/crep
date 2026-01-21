@@ -23,6 +23,17 @@ void add_file_path(Node **head, char *file_path) {
 }
 
 void list_files_recursively(char *base_path, Node **head) {
+	struct stat statbuf;
+	if (stat(base_path, &statbuf) == -1) {
+		perror("stat");
+		return;
+	}
+
+	if (S_ISREG(statbuf.st_mode)) {
+		add_file_path(head, base_path);
+		return;
+	}
+
 	char path[2048];
 	struct dirent *dp;
 	DIR *dir = opendir(base_path);
@@ -39,11 +50,10 @@ void list_files_recursively(char *base_path, Node **head) {
 				continue;
 			}
 
-			struct stat statbuf;
 			if (stat(path, &statbuf) != -1) {
 				if (S_ISDIR(statbuf.st_mode)) {
 					list_files_recursively(path, head);
-				} else {
+				} else if (S_ISREG(statbuf.st_mode)) {
 					add_file_path(head, path);
 				}
 			}
