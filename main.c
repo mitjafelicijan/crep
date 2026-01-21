@@ -23,8 +23,13 @@
 
 #include "queries/c.h"
 #include "queries/python.h"
+#include "queries/php.h"
 
 #define DEBUG 0
+
+TSLanguage *tree_sitter_c(void);
+TSLanguage *tree_sitter_python(void);
+TSLanguage *tree_sitter_php(void);
 
 typedef struct {
 	const char *fname;
@@ -95,6 +100,15 @@ void parse_source_file(void *arg) {
 
 	TSTree *tree =
 		ts_parser_parse_string(parser, NULL, source_code, strlen(source_code));
+	if (tree == NULL) {
+		if (DEBUG) {
+			fprintf(stderr, "Parsing failed for file: %s\n", file_path);
+		}
+		ts_parser_delete(parser);
+		free((void *)source_code);
+		free(args);
+		return;
+	}
 	TSNode root_node = ts_tree_root_node(tree);
 
 	const char *query_string = args->query_string;
@@ -104,13 +118,23 @@ void parse_source_file(void *arg) {
 	TSQueryError error_type;
 	TSQuery *query = ts_query_new(language, query_string, query_len, &error_offset, &error_type);
 
+	if (query == NULL) {
+		if (DEBUG) {
+			printf("Query creation failed at offset %u with error type %d\n", error_offset, error_type);
+		}
+		ts_tree_delete(tree);
+		ts_parser_delete(parser);
+		free((void *)source_code);
+		free(args);
+		return;
+	}
+
 	TSQueryCursor *query_cursor = ts_query_cursor_new();
 	ts_query_cursor_exec(query_cursor, query, root_node);
 
-	if (query != NULL) {
-		TSQueryMatch match;
-		while (ts_query_cursor_next_match(query_cursor, &match)) {
-			Function fn = {0};
+	TSQueryMatch match;
+	while (ts_query_cursor_next_match(query_cursor, &match)) {
+		Function fn = {0};
 
 			for (unsigned i = 0; i < match.capture_count; i++) {
 				TSQueryCapture capture = match.captures[i];
@@ -152,11 +176,6 @@ void parse_source_file(void *arg) {
 			free((void *)fn.ftype);
 			free((void *)fn.fparams);
 		}
-	} else {
-		if (DEBUG) {
-			printf("Query creation failed at offset %u with error type %d\n", error_offset, error_type);
-		}
-	}
 
 	ts_query_cursor_delete(query_cursor);
 	ts_query_delete(query);
@@ -184,9 +203,6 @@ int main(int argc, char *argv[]) {
 
 	const char *cfname = argv[1];
 	char *directory = (argc > 2) ? argv[2] : ".";
-
-	TSLanguage *tree_sitter_c(void);
-	TSLanguage *tree_sitter_python(void);
 
 	Node *head = NULL;
 	list_files_recursively(directory, &head);
@@ -220,6 +236,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_python();
 				query_string = (const char *)query_python;
 				query_len = query_python_len;
+			} else if (strcmp(extension, "php") == 0) {
+				lang = tree_sitter_php();
+				query_string = (const char *)query_php;
+				query_len = query_php_len;
 			}
 		}
 
