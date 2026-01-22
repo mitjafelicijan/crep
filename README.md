@@ -1,11 +1,20 @@
-`crep` is a command-line tool designed for searching code using [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) queries. Unlike traditional `grep`, which operates on text lines, `crep` understands the structure of your code, allowing for more precise semantic searching.
+`crep` is a command-line tool designed for searching code using
+[Tree-sitter](https://tree-sitter.github.io/tree-sitter/) queries. Unlike
+traditional `grep`, which operates on text lines, `crep` understands the
+structure of your code, allowing for more precise semantic searching.
 
 ## Features
 
-- **Semantic Search**: Uses Tree-sitter to parse code into Concrete Syntax Trees (CSTs) and execute queries against them.
-- **Language Support**: Currently supports **C** and **Python**.
-- **Multi-threaded**: Utilizes a custom thread pool for efficient scanning of large codebases.
-- **Detailed Output**: Reports file path, line number, return type, function name, and parameters for each match.
+- **Semantic Search**: Uses Tree-sitter to parse code into Concrete Syntax Trees
+  (CSTs) and execute queries against them.
+- **Broad Language Support**: Supports multiple languages including C, C++, Go,
+  Python, PHP, Rust, and JavaScript.
+- **Multi-threaded**: Utilizes a custom thread pool for efficient scanning of
+  large codebases.
+- **Structural Matching**: Reports file path, line number, return type, function
+  name, and parameters for each match.
+- **Debug Mode**: Supports detailed logging via the `DEBUG` environment
+  variable.
 
 ## Prerequisites
 
@@ -29,8 +38,12 @@ make all
 ./crep <search_term> [path]
 ```
 
-- `<search_term>`: The string to search for within function names.
+- `<search_term>`: The string to search for within function/method names.
 - `[path]`: Optional. The directory or file to search (defaults to current directory).
+
+### Environment Variables
+
+- `DEBUG=1` or `DEBUG=true`: Enable verbose debug logging.
 
 ### Examples
 
@@ -44,14 +57,33 @@ Search for functions containing "parse" in a specific file:
 ./crep parse main.c
 ```
 
+Run with debug logging enabled:
+```bash
+DEBUG=1 ./crep init .
+```
+
 ## How It Works
 
 `crep` works by:
-1. Identifying supported files.
-2. Parsing the files using Tree-sitter grammars.
-3. Executing a structural query to find function/method definitions.
+
+1. Identifying supported files based on extension.
+2. Parsing the files using language-specific Tree-sitter grammars.
+3. Executing a structural query to find function/method definitions, including
+   return types and parameters.
 4. Matching the identifier against the provided search term.
-5. Displaying the results in a format similar to grep but with added semantic context.
+5. Displaying the results with added semantic context.
+
+## Supported Languages
+
+| Language   | Extensions     |
+| ---------- | -------------- |
+| C          | `.c`, `.h`     |
+| C++        | `.cpp`, `.hpp` |
+| Go         | `.go`          |
+| Python     | `.py`          |
+| PHP        | `.php`         |
+| Rust       | `.rs`          |
+| JavaScript | `.js`          |
 
 ## Additional resources
 
