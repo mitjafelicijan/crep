@@ -22,6 +22,7 @@
 #include "queries/javascript.h"
 #include "queries/kotlin.h"
 #include "queries/lua.h"
+#include "queries/odin.h"
 #include "queries/php.h"
 #include "queries/python.h"
 #include "queries/rust.h"
@@ -39,6 +40,7 @@ TSLanguage *tree_sitter_javascript(void);
 TSLanguage *tree_sitter_lua(void);
 TSLanguage *tree_sitter_zig(void);
 TSLanguage *tree_sitter_kotlin(void);
+TSLanguage *tree_sitter_odin(void);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -357,6 +359,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_kotlin();
 				query_string = (const char *)query_kotlin;
 				query_len = query_kotlin_len;
+			} else if (strcmp(extension, "odin") == 0) {
+				lang = tree_sitter_odin();
+				query_string = (const char *)query_odin;
+				query_len = query_odin_len;
 			}
 		}
 

@@ -7,7 +7,7 @@ VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -O3
 LIBS = -I./vendor/tree-sitter/lib/include -lpthread
 
-LANGS = c cpp python php go rust javascript lua zig kotlin
+LANGS = c cpp python php go rust javascript lua zig kotlin odin
 QUERY_HEADERS = $(patsubst %, queries/%.h, $(LANGS))
 TS_SUBDIRS = tree-sitter $(patsubst %, tree-sitter-%, $(LANGS))
 

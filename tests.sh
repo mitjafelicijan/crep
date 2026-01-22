@@ -118,6 +118,13 @@ run_test "Kotlin Class" "MyClass" "$TEST_DIR/test.kt" "class MyClass"
 run_test "Kotlin Method" "myMethod" "$TEST_DIR/test.kt" "fun myMethod ()"
 run_test "Kotlin Extension" "extensionFunc" "$TEST_DIR/test.kt" "fun extensionFunc ()"
 
+# Odin Tests
+run_test "Odin Proc" "hello" "$TEST_DIR/test.odin" "proc hello"
+run_test "Odin Params" "add" "$TEST_DIR/test.odin" "proc add (a, b: int)"
+run_test "Odin Struct" "Point" "$TEST_DIR/test.odin" "struct Point"
+run_test "Odin Enum" "Color" "$TEST_DIR/test.odin" "enum Color"
+run_test "Odin Variable Proc" "complex_proc" "$TEST_DIR/test.odin" "proc complex_proc (name: string, age: int, flags: ..bool)"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"
