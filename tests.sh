@@ -70,6 +70,13 @@ run_test "JS Class" "MyClass" "$TEST_DIR/test.js" "class MyClass"
 run_test "JS Method" "myMethod" "$TEST_DIR/test.js" "myMethod (x)"
 run_test "JS Object Method" "shortMethod" "$TEST_DIR/test.js" "shortMethod (a)"
 
+# C++ Tests
+run_test "C++ Func" "global_hello" "$TEST_DIR/test.cpp" "void global_hello ()"
+run_test "C++ Namespace" "my_namespace" "$TEST_DIR/test.cpp" "namespace my_namespace"
+run_test "C++ Class" "MyClass" "$TEST_DIR/test.cpp" "class MyClass"
+run_test "C++ Struct" "MyStruct" "$TEST_DIR/test.cpp" "struct MyStruct"
+run_test "C++ Method" "myMethod" "$TEST_DIR/test.cpp" "void myMethod ()"
+
 echo "----------------"
 if [ $failed -eq 0 ]; then
     echo "All tests passed!"

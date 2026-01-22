@@ -24,6 +24,7 @@
 #include "tpool.h"
 
 #include "queries/c.h"
+#include "queries/cpp.h"
 #include "queries/go.h"
 #include "queries/php.h"
 #include "queries/python.h"
@@ -33,6 +34,7 @@
 int debug_enabled = 0;
 
 TSLanguage *tree_sitter_c(void);
+TSLanguage *tree_sitter_cpp(void);
 TSLanguage *tree_sitter_go(void);
 TSLanguage *tree_sitter_python(void);
 TSLanguage *tree_sitter_php(void);
@@ -244,6 +246,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_c();
 				query_string = (const char *)query_c;
 				query_len = query_c_len;
+			} else if (strcmp(extension, "cpp") == 0 || strcmp(extension, "hpp") == 0) {
+				lang = tree_sitter_cpp();
+				query_string = (const char *)query_cpp;
+				query_len = query_cpp_len;
 			} else if (strcmp(extension, "go") == 0) {
 				lang = tree_sitter_go();
 				query_string = (const char *)query_go;

@@ -1,4 +1,4 @@
-.PHONY: all query tsbuild valgrind tests format clean
+.PHONY: all queries tsbuild valgrind tests format clean
 
 TARGET = crep
 SOURCES = $(wildcard *.c *.h)
@@ -16,10 +16,11 @@ $(info LIBS: $(LIBS))
 $(TARGET):
 	$(CC) $(CFLAGS) $(SOURCES) $(LIBS) -o $(TARGET) $(TS_ALIBS)
 
-all: query tsbuild $(TARGET)
+all: queries tsbuild $(TARGET)
 
-query:
+queries:
 	xxd -i -n query_c queries/c.scm > queries/c.h
+	xxd -i -n query_cpp queries/cpp.scm > queries/cpp.h
 	xxd -i -n query_python queries/python.scm > queries/python.h
 	xxd -i -n query_php queries/php.scm > queries/php.h
 	xxd -i -n query_go queries/go.scm > queries/go.h
@@ -29,6 +30,7 @@ query:
 tsbuild:
 	-$(MAKE) -C vendor/tree-sitter -B
 	-$(MAKE) -C vendor/tree-sitter-c -B
+	-$(MAKE) -C vendor/tree-sitter-cpp -B
 	-$(MAKE) -C vendor/tree-sitter-python -B
 	-$(MAKE) -C vendor/tree-sitter-php -B
 	-$(MAKE) -C vendor/tree-sitter-go -B
@@ -48,6 +50,7 @@ clean:
 	rm -f *.o $(TARGET) callgrind.out.*
 	$(MAKE) -C vendor/tree-sitter -B clean
 	$(MAKE) -C vendor/tree-sitter-c -B clean
+	$(MAKE) -C vendor/tree-sitter-cpp -B clean
 	$(MAKE) -C vendor/tree-sitter-python -B clean
 	$(MAKE) -C vendor/tree-sitter-php -B clean
 	$(MAKE) -C vendor/tree-sitter-go -B clean
