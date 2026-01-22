@@ -105,6 +105,10 @@ run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void fooba
 run_test_with_flags "Depth 0 (root)" "-d 0" "level" "tests/depth_test" "void level0"
 run_test_with_flags "Depth 1 (recursive)" "-d 1" "level" "tests/depth_test" "void level1"
 
+# Levenshtein Distance Tests
+run_test_with_flags "Levenshtein -l 1 match" "-l 1" "heelo" "$TEST_DIR/test.c" "void hello ()"
+run_test_with_flags "Levenshtein -l 2 match" "-l 2" "heloo" "$TEST_DIR/test.c" "void hello ()"
+
 echo "----------------"
 if [ $failed -eq 0 ]; then
     echo "All tests passed!"

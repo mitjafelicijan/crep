@@ -1,7 +1,3 @@
-// TODO:
-//  - Add Levenshtein distance for matching and expose distance as arg with
-//    something like -d5 which would allow distance of 5 on a match.
-
 // FIXME:
 //  - Truncate longer argument list.
 
@@ -37,6 +33,30 @@ TSLanguage *tree_sitter_python(void);
 TSLanguage *tree_sitter_php(void);
 TSLanguage *tree_sitter_rust(void);
 TSLanguage *tree_sitter_javascript(void);
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+int levenshtein_distance(const char *s1, const char *s2) {
+	unsigned int len1 = strlen(s1);
+	unsigned int len2 = strlen(s2);
+	unsigned int distances[len1 + 1][len2 + 1];
+
+	for (unsigned int i = 0; i <= len1; i++) {
+		distances[i][0] = i;
+	}
+	for (unsigned int j = 0; j <= len2; j++) {
+		distances[0][j] = j;
+	}
+
+	for (unsigned int i = 1; i <= len1; i++) {
+		for (unsigned int j = 1; j <= len2; j++) {
+			int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+			distances[i][j] = MIN(MIN(distances[i - 1][j] + 1, distances[i][j - 1] + 1), distances[i - 1][j - 1] + cost);
+		}
+	}
+
+	return distances[len1][len2];
+}
 
 typedef struct {
 	const char *fname;
@@ -91,6 +111,7 @@ struct ThreadArgs {
 	uint32_t query_len;
 	const char *cfname;
 	int case_sensitive;
+	int max_distance;
 };
 
 // void parse_source_file(const char *file_path, const char *source_code,
@@ -103,6 +124,7 @@ void parse_source_file(void *arg) {
 	TSLanguage *language = args->language;
 	const char *cfname = args->cfname;
 	int case_sensitive = args->case_sensitive;
+	int max_distance = args->max_distance;
 
 	TSParser *parser = ts_parser_new();
 	ts_parser_set_language(parser, language);
@@ -169,18 +191,33 @@ void parse_source_file(void *arg) {
 		}
 
 		// Substring matching.
-		// FIXME: Add Levenshtein distance.
 		if (fn.fname != NULL) {
-			char *result;
-			if (case_sensitive) {
-				result = strstr(fn.fname, cfname);
+			char *result = NULL;
+			int distance = -1;
+
+			if (max_distance > 0) {
+				distance = levenshtein_distance(fn.fname, cfname);
+				if (distance <= max_distance) {
+					// We treat it as a match, but result pointer logic is different
+					// For printing purposes effectively a match.
+					// We'll just set result to non-null to trigger the print.
+					result = (char *)fn.fname; 
+				}
 			} else {
-				result = strcasestr(fn.fname, cfname);
+				if (case_sensitive) {
+					result = strstr(fn.fname, cfname);
+				} else {
+					result = strcasestr(fn.fname, cfname);
+				}
 			}
 
 			if (result != NULL) {
 				char *fparams_formatted = remove_newlines(fn.fparams);
-				printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
+				if (max_distance > 0) {
+					printf("%s:%zu: %s %s %s (dist: %d)\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "", distance);
+				} else {
+					printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
+				}
 				free(fparams_formatted);
 			}
 		}
@@ -211,29 +248,34 @@ const char *get_file_extension(const char *file_path) {
 
 int main(int argc, char *argv[]) {
 	int case_sensitive = 0;
+	int max_distance = 0;
 	int max_depth = -1;
 	int opt;
 	struct option long_options[] = {
 		{"case-sensitive", no_argument, 0, 'c'},
+		{"levenshtein", required_argument, 0, 'l'},
 		{"depth", required_argument, 0, 'd'},
 		{0, 0, 0, 0}};
 
-	while ((opt = getopt_long(argc, argv, "cd:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "cl:d:", long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'c':
 			case_sensitive = 1;
+			break;
+		case 'l':
+			max_distance = atoi(optarg);
 			break;
 		case 'd':
 			max_depth = atoi(optarg);
 			break;
 		default:
-			fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
+			fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-l|--levenshtein <dist>] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
 			return 1;
 		}
 	}
 
 	if (optind >= argc) {
-		fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-l|--levenshtein <dist>] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
 		return 1;
 	}
 
@@ -317,6 +359,7 @@ int main(int argc, char *argv[]) {
 				thread_args->query_len = query_len;
 				thread_args->cfname = cfname;
 				thread_args->case_sensitive = case_sensitive;
+				thread_args->max_distance = max_distance;
 
 				tp_add_job(pool, (thread_func_t)parse_source_file, thread_args);
 			} else {

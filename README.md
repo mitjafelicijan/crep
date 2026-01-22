@@ -35,9 +35,12 @@ make all
 ## Usage
 
 ```bash
-./crep <search_term> [path]
+./crep [-c|--case-sensitive] [-l|--levenshtein <dist>] [-d|--depth <level>] <search_term> [path]
 ```
 
+- `-c, --case-sensitive`: Enable case-sensitive matching (default is case-insensitive).
+- `-l, --levenshtein <dist>`: Enable fuzzy matching with a maximum Levenshtein distance of `<dist>`.
+- `-d, --depth <level>`: Set the maximum recursion depth for directory traversal.
 - `<search_term>`: The string to search for within function/method names.
 - `[path]`: Optional. The directory or file to search (defaults to current directory).
 
@@ -48,6 +51,7 @@ make all
 ### Examples
 
 Search for all functions containing "init" in the current directory:
+
 ```bash
 ./crep init .
 ```
@@ -60,6 +64,12 @@ Search for functions containing "parse" in a specific file:
 Run with debug logging enabled:
 ```bash
 DEBUG=1 ./crep init .
+```
+
+Search for "main" allowing for 2 typos (e.g. "mian"):
+
+```bash
+./crep -l 2 "mian" main.c
 ```
 
 ## How It Works
