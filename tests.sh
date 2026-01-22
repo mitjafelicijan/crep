@@ -104,6 +104,13 @@ run_test "Lua Assignment" "myfunc" "$TEST_DIR/test.lua" "function myfunc"
 run_test "Lua Method" "greet" "$TEST_DIR/test.lua" "function MyTable:greet"
 run_test "Lua Nested" "inner" "$TEST_DIR/test.lua" "function inner"
 
+# Zig Tests
+run_test "Zig Func" "main" "$TEST_DIR/test.zig" " main "
+run_test "Zig Params" "add" "$TEST_DIR/test.zig" " add "
+run_test "Zig Struct" "Point" "$TEST_DIR/test.zig" " Point "
+run_test "Zig Enum" "Color" "$TEST_DIR/test.zig" " Color "
+run_test "Zig Error" "MyError" "$TEST_DIR/test.zig" " MyError "
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"

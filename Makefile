@@ -27,6 +27,7 @@ queries:
 	xxd -i -n query_rust queries/rust.scm > queries/rust.h
 	xxd -i -n query_javascript queries/javascript.scm > queries/javascript.h
 	xxd -i -n query_lua queries/lua.scm > queries/lua.h
+	xxd -i -n query_zig queries/zig.scm > queries/zig.h
 
 tsbuild:
 	-$(MAKE) -C vendor/tree-sitter -B
@@ -38,6 +39,7 @@ tsbuild:
 	-$(MAKE) -C vendor/tree-sitter-rust -B
 	-$(MAKE) -C vendor/tree-sitter-javascript -B
 	-$(MAKE) -C vendor/tree-sitter-lua -B
+	-$(MAKE) -C vendor/tree-sitter-zig -B
 
 valgrind:
 	valgrind -s --leak-check=full ./$(TARGET)
@@ -59,3 +61,4 @@ clean:
 	$(MAKE) -C vendor/tree-sitter-rust -B clean
 	$(MAKE) -C vendor/tree-sitter-javascript -B clean
 	$(MAKE) -C vendor/tree-sitter-lua -B clean
+	$(MAKE) -C vendor/tree-sitter-zig -B clean
