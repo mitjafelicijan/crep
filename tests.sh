@@ -130,6 +130,11 @@ run_test "Tcl Proc" "hello" "$TEST_DIR/test.tcl" "proc hello"
 run_test "Tcl Params" "add" "$TEST_DIR/test.tcl" "proc add"
 run_test "Tcl Complex" "complex_proc" "$TEST_DIR/test.tcl" "proc complex_proc"
 
+# GLSL Tests
+run_test "GLSL Func" "main" "$TEST_DIR/test.glsl" "void main"
+run_test "GLSL Params" "add_vectors" "$TEST_DIR/test.glsl" "vec3 add_vectors (vec3 a, vec3 b)"
+run_test "GLSL Struct" "Point" "$TEST_DIR/test.glsl" "struct Point"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"

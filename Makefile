@@ -2,13 +2,13 @@
 
 TARGET = crep
 ABI_CHECK_TARGET = abicheck
-SOURCES = $(filter-out check.c, $(wildcard *.c *.h queries/*.h))
+SOURCES = $(filter-out check.c abicheck.c, $(wildcard *.c *.h queries/*.h))
 TS_ALIBS = $(shell find vendor -name "*.a" -print)
 VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -O3
 LIBS = -I./vendor/tree-sitter/lib/include -lpthread
 
-LANGS = c cpp python php go rust javascript lua zig kotlin odin tcl
+LANGS = c cpp python php go rust javascript lua zig kotlin odin tcl glsl
 QUERY_HEADERS = $(patsubst %, queries/%.h, $(LANGS))
 TS_SUBDIRS = tree-sitter $(patsubst %, tree-sitter-%, $(LANGS))
 

@@ -13,6 +13,7 @@ TSLanguage *tree_sitter_zig(void);
 TSLanguage *tree_sitter_kotlin(void);
 TSLanguage *tree_sitter_odin(void);
 TSLanguage *tree_sitter_tcl(void);
+TSLanguage *tree_sitter_glsl(void);
 
 int main() {
 	printf("ABI version compliance check:\n");
@@ -28,5 +29,6 @@ int main() {
 	printf(" - Kotlin    %u\n", ts_language_version(tree_sitter_kotlin()));
 	printf(" - Odin      %u\n", ts_language_version(tree_sitter_odin()));
 	printf(" - Tcl       %u\n", ts_language_version(tree_sitter_tcl()));
+	printf(" - GLSL      %u\n", ts_language_version(tree_sitter_glsl()));
 	return 0;
 }

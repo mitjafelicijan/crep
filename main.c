@@ -18,6 +18,7 @@
 
 #include "queries/c.h"
 #include "queries/cpp.h"
+#include "queries/glsl.h"
 #include "queries/go.h"
 #include "queries/javascript.h"
 #include "queries/kotlin.h"
@@ -43,6 +44,7 @@ TSLanguage *tree_sitter_zig(void);
 TSLanguage *tree_sitter_kotlin(void);
 TSLanguage *tree_sitter_odin(void);
 TSLanguage *tree_sitter_tcl(void);
+TSLanguage *tree_sitter_glsl(void);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -369,6 +371,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_tcl();
 				query_string = (const char *)query_tcl;
 				query_len = query_tcl_len;
+			} else if (strcmp(extension, "glsl") == 0) {
+				lang = tree_sitter_glsl();
+				query_string = (const char *)query_glsl;
+				query_len = query_glsl_len;
 			}
 		}
 
