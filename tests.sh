@@ -111,6 +111,13 @@ run_test "Zig Struct" "Point" "$TEST_DIR/test.zig" " Point "
 run_test "Zig Enum" "Color" "$TEST_DIR/test.zig" " Color "
 run_test "Zig Error" "MyError" "$TEST_DIR/test.zig" " MyError "
 
+# Kotlin Tests
+run_test "Kotlin Func" "hello" "$TEST_DIR/test.kt" "fun hello ()"
+run_test "Kotlin Params" "add" "$TEST_DIR/test.kt" "fun add (a: Int, b: Int)"
+run_test "Kotlin Class" "MyClass" "$TEST_DIR/test.kt" "class MyClass"
+run_test "Kotlin Method" "myMethod" "$TEST_DIR/test.kt" "fun myMethod ()"
+run_test "Kotlin Extension" "extensionFunc" "$TEST_DIR/test.kt" "fun extensionFunc ()"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"
