@@ -26,6 +26,7 @@
 #include "queries/php.h"
 #include "queries/python.h"
 #include "queries/rust.h"
+#include "queries/tcl.h"
 #include "queries/zig.h"
 
 int debug_enabled = 0;
@@ -41,6 +42,7 @@ TSLanguage *tree_sitter_lua(void);
 TSLanguage *tree_sitter_zig(void);
 TSLanguage *tree_sitter_kotlin(void);
 TSLanguage *tree_sitter_odin(void);
+TSLanguage *tree_sitter_tcl(void);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -363,6 +365,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_odin();
 				query_string = (const char *)query_odin;
 				query_len = query_odin_len;
+			} else if (strcmp(extension, "tcl") == 0) {
+				lang = tree_sitter_tcl();
+				query_string = (const char *)query_tcl;
+				query_len = query_tcl_len;
 			}
 		}
 

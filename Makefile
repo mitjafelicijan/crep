@@ -1,13 +1,14 @@
 .PHONY: all queries tsbuild valgrind tests format clean
 
 TARGET = crep
-SOURCES = $(wildcard *.c *.h queries/*.h)
+ABI_CHECK_TARGET = abicheck
+SOURCES = $(filter-out check.c, $(wildcard *.c *.h queries/*.h))
 TS_ALIBS = $(shell find vendor -name "*.a" -print)
 VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -O3
 LIBS = -I./vendor/tree-sitter/lib/include -lpthread
 
-LANGS = c cpp python php go rust javascript lua zig kotlin odin
+LANGS = c cpp python php go rust javascript lua zig kotlin odin tcl
 QUERY_HEADERS = $(patsubst %, queries/%.h, $(LANGS))
 TS_SUBDIRS = tree-sitter $(patsubst %, tree-sitter-%, $(LANGS))
 
@@ -20,7 +21,7 @@ $(info TS_ALIBS: $(TS_ALIBS))
 $(info CFLAGS: $(CFLAGS))
 $(info LIBS: $(LIBS))
 
-all: $(QUERY_HEADERS) tsbuild $(TARGET)
+all: $(QUERY_HEADERS) tsbuild $(TARGET) $(ABI_CHECK_TARGET)
 
 tsbuild:
 	$(MAKE) -C vendor/tree-sitter libtree-sitter.a
@@ -30,6 +31,9 @@ tsbuild:
 
 $(TARGET): $(SOURCES) tsbuild
 	$(CC) $(CFLAGS) $(SOURCES) $(LIBS) -o $(TARGET) $(shell find vendor -name "*.a")
+
+$(ABI_CHECK_TARGET): abicheck.c tsbuild
+	$(CC) $(CFLAGS) abicheck.c $(LIBS) $(filter-out %/libtree-sitter.a, $(wildcard vendor/**/*.a)) vendor/tree-sitter/libtree-sitter.a -o $(ABI_CHECK_TARGET)
 
 queries/%.h: queries/%.scm
 	xxd -i -n query_$* $< > $@
@@ -46,7 +50,7 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm -f *.o $(TARGET) callgrind.out.* queries/*.h
+	rm -f *.o $(TARGET) $(ABI_CHECK_TARGET) callgrind.out.* queries/*.h
 	@for dir in $(TS_SUBDIRS); do \
 		$(MAKE) -C vendor/$$dir clean; \
 	done

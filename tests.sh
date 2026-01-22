@@ -125,6 +125,11 @@ run_test "Odin Struct" "Point" "$TEST_DIR/test.odin" "struct Point"
 run_test "Odin Enum" "Color" "$TEST_DIR/test.odin" "enum Color"
 run_test "Odin Variable Proc" "complex_proc" "$TEST_DIR/test.odin" "proc complex_proc (name: string, age: int, flags: ..bool)"
 
+# Tcl Tests
+run_test "Tcl Proc" "hello" "$TEST_DIR/test.tcl" "proc hello"
+run_test "Tcl Params" "add" "$TEST_DIR/test.tcl" "proc add"
+run_test "Tcl Complex" "complex_proc" "$TEST_DIR/test.tcl" "proc complex_proc"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"
