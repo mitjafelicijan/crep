@@ -135,6 +135,13 @@ run_test "GLSL Func" "main" "$TEST_DIR/test.glsl" "void main"
 run_test "GLSL Params" "add_vectors" "$TEST_DIR/test.glsl" "vec3 add_vectors (vec3 a, vec3 b)"
 run_test "GLSL Struct" "Point" "$TEST_DIR/test.glsl" "struct Point"
 
+# CUDA Tests
+run_test "CUDA Global" "vectorAdd" "$TEST_DIR/test.cu" "void vectorAdd"
+run_test "CUDA Device" "get_thread_id" "$TEST_DIR/test.cu" "int get_thread_id"
+run_test "CUDA Host" "init_vectors" "$TEST_DIR/test.cu" "void init_vectors"
+run_test "CUDA Struct" "Point" "$TEST_DIR/test.cuh" "struct Point"
+run_test "CUDA Class" "Dim3" "$TEST_DIR/test.cuh" "class Dim3"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"

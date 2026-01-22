@@ -18,6 +18,7 @@
 
 #include "queries/c.h"
 #include "queries/cpp.h"
+#include "queries/cuda.h"
 #include "queries/glsl.h"
 #include "queries/go.h"
 #include "queries/javascript.h"
@@ -45,6 +46,7 @@ TSLanguage *tree_sitter_kotlin(void);
 TSLanguage *tree_sitter_odin(void);
 TSLanguage *tree_sitter_tcl(void);
 TSLanguage *tree_sitter_glsl(void);
+TSLanguage *tree_sitter_cuda(void);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -375,6 +377,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_glsl();
 				query_string = (const char *)query_glsl;
 				query_len = query_glsl_len;
+			} else if (strcmp(extension, "cu") == 0 || strcmp(extension, "cuh") == 0) {
+				lang = tree_sitter_cuda();
+				query_string = (const char *)query_cuda;
+				query_len = query_cuda_len;
 			}
 		}
 
