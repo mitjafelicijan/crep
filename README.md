@@ -3,18 +3,23 @@
 traditional `grep`, which operates on text lines, `crep` understands the
 structure of your code, allowing for more precise semantic searching.
 
+> [!IMPORTANT]
+> `crep` is a fun project and is not intended for real use. I made it to learn
+> Tree-sitter and to have fun.
+
 ## Features
 
 - **Semantic Search**: Uses Tree-sitter to parse code into Concrete Syntax Trees
   (CSTs) and execute queries against them.
-- **Broad Language Support**: Supports multiple languages including C, C++, Go,
-  Python, PHP, Rust, JavaScript and Lua.
+- **Broad Language Support**: Supports a wide range of languages including C, C++,
+  Rust, Python, Go, and others (see full list below).
 - **Multi-threaded**: Utilizes a custom thread pool for efficient scanning of
   large codebases.
 - **Structural Matching**: Reports file path, line number, return type, function
   name, and parameters for each match.
 - **Debug Mode**: Supports detailed logging via the `DEBUG` environment
   variable.
+- **Fuzzy Matching**: Supports configurable Levenshtein distance for fuzzy search.
 
 ## Prerequisites
 
@@ -89,12 +94,26 @@ Search for "main" allowing for 2 typos (e.g. "mian"):
 | ---------- | -------------- |
 | C          | `.c`, `.h`     |
 | C++        | `.cpp`, `.hpp` |
+| CUDA       | `.cu`, `.cuh`  |
+| GLSL       | `.glsl`        |
 | Go         | `.go`          |
-| Python     | `.py`          |
-| PHP        | `.php`         |
-| Rust       | `.rs`          |
 | JavaScript | `.js`          |
+| Kotlin     | `.kt`          |
 | Lua        | `.lua`         |
+| Odin       | `.odin`        |
+| PHP        | `.php`         |
+| Python     | `.py`          |
+| Rust       | `.rs`          |
+| Tcl        | `.tcl`         |
+| Zig        | `.zig`         |
+
+## Running Tests
+
+To run the test suite:
+
+```bash
+make tests
+```
 
 ## Additional resources
 
