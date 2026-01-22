@@ -7,39 +7,34 @@ VENDOR_DIRS = $(wildcard vendor/*)
 CFLAGS = $(EXTRA_FLAGS) -Wall -Wextra -std=gnu99 -pedantic -O3
 LIBS = -I./vendor/tree-sitter/lib/include -lpthread
 
+LANGS = c cpp python php go rust javascript lua zig
+QUERY_HEADERS = $(patsubst %, queries/%.h, $(LANGS))
+TS_SUBDIRS = tree-sitter $(patsubst %, tree-sitter-%, $(LANGS))
+
 $(info VENDOR_DIRS: $(VENDOR_DIRS))
+$(info LANGS: $(LANGS))
+$(info QUERY_HEADERS: $(QUERY_HEADERS))
+$(info TS_SUBDIRS: $(TS_SUBDIRS))
 $(info SOURCES: $(SOURCES))
 $(info TS_ALIBS: $(TS_ALIBS))
 $(info CFLAGS: $(CFLAGS))
 $(info LIBS: $(LIBS))
 
-$(TARGET):
-	$(CC) $(CFLAGS) $(SOURCES) $(LIBS) -o $(TARGET) $(TS_ALIBS)
-
-all: queries tsbuild $(TARGET)
-
-queries:
-	xxd -i -n query_c queries/c.scm > queries/c.h
-	xxd -i -n query_cpp queries/cpp.scm > queries/cpp.h
-	xxd -i -n query_python queries/python.scm > queries/python.h
-	xxd -i -n query_php queries/php.scm > queries/php.h
-	xxd -i -n query_go queries/go.scm > queries/go.h
-	xxd -i -n query_rust queries/rust.scm > queries/rust.h
-	xxd -i -n query_javascript queries/javascript.scm > queries/javascript.h
-	xxd -i -n query_lua queries/lua.scm > queries/lua.h
-	xxd -i -n query_zig queries/zig.scm > queries/zig.h
+all: $(QUERY_HEADERS) tsbuild $(TARGET)
 
 tsbuild:
-	-$(MAKE) -C vendor/tree-sitter -B
-	-$(MAKE) -C vendor/tree-sitter-c -B
-	-$(MAKE) -C vendor/tree-sitter-cpp -B
-	-$(MAKE) -C vendor/tree-sitter-python -B
-	-$(MAKE) -C vendor/tree-sitter-php -B
-	-$(MAKE) -C vendor/tree-sitter-go -B
-	-$(MAKE) -C vendor/tree-sitter-rust -B
-	-$(MAKE) -C vendor/tree-sitter-javascript -B
-	-$(MAKE) -C vendor/tree-sitter-lua -B
-	-$(MAKE) -C vendor/tree-sitter-zig -B
+	$(MAKE) -C vendor/tree-sitter libtree-sitter.a
+	@for lang in $(LANGS); do \
+		$(MAKE) -C vendor/tree-sitter-$$lang libtree-sitter-$$lang.a || true; \
+	done
+
+$(TARGET): $(SOURCES) tsbuild
+	$(CC) $(CFLAGS) $(SOURCES) $(LIBS) -o $(TARGET) $(shell find vendor -name "*.a")
+
+queries/%.h: queries/%.scm
+	xxd -i -n query_$* $< > $@
+
+queries: $(QUERY_HEADERS)
 
 valgrind:
 	valgrind -s --leak-check=full ./$(TARGET)
@@ -51,14 +46,7 @@ format:
 	clang-format -i *.c *.h
 
 clean:
-	rm -f *.o $(TARGET) callgrind.out.*
-	$(MAKE) -C vendor/tree-sitter -B clean
-	$(MAKE) -C vendor/tree-sitter-c -B clean
-	$(MAKE) -C vendor/tree-sitter-cpp -B clean
-	$(MAKE) -C vendor/tree-sitter-python -B clean
-	$(MAKE) -C vendor/tree-sitter-php -B clean
-	$(MAKE) -C vendor/tree-sitter-go -B clean
-	$(MAKE) -C vendor/tree-sitter-rust -B clean
-	$(MAKE) -C vendor/tree-sitter-javascript -B clean
-	$(MAKE) -C vendor/tree-sitter-lua -B clean
-	$(MAKE) -C vendor/tree-sitter-zig -B clean
+	rm -f *.o $(TARGET) callgrind.out.* queries/*.h
+	@for dir in $(TS_SUBDIRS); do \
+		$(MAKE) -C vendor/$$dir clean; \
+	done
