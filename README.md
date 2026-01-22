@@ -8,7 +8,7 @@ structure of your code, allowing for more precise semantic searching.
 - **Semantic Search**: Uses Tree-sitter to parse code into Concrete Syntax Trees
   (CSTs) and execute queries against them.
 - **Broad Language Support**: Supports multiple languages including C, C++, Go,
-  Python, PHP, Rust, and JavaScript.
+  Python, PHP, Rust, JavaScript and Lua.
 - **Multi-threaded**: Utilizes a custom thread pool for efficient scanning of
   large codebases.
 - **Structural Matching**: Reports file path, line number, return type, function
@@ -94,6 +94,7 @@ Search for "main" allowing for 2 typos (e.g. "mian"):
 | PHP        | `.php`         |
 | Rust       | `.rs`          |
 | JavaScript | `.js`          |
+| Lua        | `.lua`         |
 
 ## Additional resources
 
@@ -104,3 +105,4 @@ Search for "main" allowing for 2 typos (e.g. "mian"):
 - https://github.com/tree-sitter/tree-sitter
 - https://tree-sitter.github.io/tree-sitter/playground
 - https://dreampuf.github.io/GraphvizOnline/
+- https://github.com/tree-sitter-grammars

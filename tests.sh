@@ -97,6 +97,13 @@ run_test "C++ Class" "MyClass" "$TEST_DIR/test.cpp" "class MyClass"
 run_test "C++ Struct" "MyStruct" "$TEST_DIR/test.cpp" "struct MyStruct"
 run_test "C++ Method" "myMethod" "$TEST_DIR/test.cpp" "void myMethod ()"
 
+# Lua Tests
+run_test "Lua Func" "hello" "$TEST_DIR/test.lua" "function hello"
+run_test "Lua Local Func" "secret_formula" "$TEST_DIR/test.lua" "function secret_formula"
+run_test "Lua Assignment" "myfunc" "$TEST_DIR/test.lua" "function myfunc"
+run_test "Lua Method" "greet" "$TEST_DIR/test.lua" "function MyTable:greet"
+run_test "Lua Nested" "inner" "$TEST_DIR/test.lua" "function inner"
+
 # Case Sensitivity Tests
 run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
 run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"

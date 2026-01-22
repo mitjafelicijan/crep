@@ -23,6 +23,7 @@
 #include "queries/php.h"
 #include "queries/python.h"
 #include "queries/rust.h"
+#include "queries/lua.h"
 
 int debug_enabled = 0;
 
@@ -33,6 +34,7 @@ TSLanguage *tree_sitter_python(void);
 TSLanguage *tree_sitter_php(void);
 TSLanguage *tree_sitter_rust(void);
 TSLanguage *tree_sitter_javascript(void);
+TSLanguage *tree_sitter_lua(void);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -339,6 +341,10 @@ int main(int argc, char *argv[]) {
 				lang = tree_sitter_javascript();
 				query_string = (const char *)query_javascript;
 				query_len = query_javascript_len;
+			} else if (strcmp(extension, "lua") == 0) {
+				lang = tree_sitter_lua();
+				query_string = (const char *)query_lua;
+				query_len = query_lua_len;
 			}
 		}
 
