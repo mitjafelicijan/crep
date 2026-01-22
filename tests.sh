@@ -63,6 +63,13 @@ run_test "Go Struct" "Point" "$TEST_DIR/test.go" "type Point struct"
 run_test "Go Interface" "Describer" "$TEST_DIR/test.go" "type Describer interface"
 run_test "Go Const" "MaxValue" "$TEST_DIR/test.go" "const MaxValue"
 
+# JavaScript Tests
+run_test "JS Func" "hello" "$TEST_DIR/test.js" "function hello ()"
+run_test "JS Params" "add" "$TEST_DIR/test.js" "function add (a, b)"
+run_test "JS Class" "MyClass" "$TEST_DIR/test.js" "class MyClass"
+run_test "JS Method" "myMethod" "$TEST_DIR/test.js" "myMethod (x)"
+run_test "JS Object Method" "shortMethod" "$TEST_DIR/test.js" "shortMethod (a)"
+
 echo "----------------"
 if [ $failed -eq 0 ]; then
     echo "All tests passed!"

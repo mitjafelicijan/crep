@@ -1,4 +1,4 @@
-.PHONY: all query ts-build ts-clean valgrind tests format clean
+.PHONY: all query tsbuild valgrind tests format clean
 
 TARGET = crep
 SOURCES = $(wildcard *.c *.h)
@@ -16,7 +16,7 @@ $(info LIBS: $(LIBS))
 $(TARGET):
 	$(CC) $(CFLAGS) $(SOURCES) $(LIBS) -o $(TARGET) $(TS_ALIBS)
 
-all: ts-build query $(TARGET)
+all: query tsbuild $(TARGET)
 
 query:
 	xxd -i -n query_c queries/c.scm > queries/c.h
@@ -24,22 +24,16 @@ query:
 	xxd -i -n query_php queries/php.scm > queries/php.h
 	xxd -i -n query_go queries/go.scm > queries/go.h
 	xxd -i -n query_rust queries/rust.scm > queries/rust.h
+	xxd -i -n query_javascript queries/javascript.scm > queries/javascript.h
 
-ts-build:
-	-cd vendor/tree-sitter && make -B
-	-cd vendor/tree-sitter-c && make -B
-	-cd vendor/tree-sitter-python && make -B
-	-cd vendor/tree-sitter-php && make -B
-	-cd vendor/tree-sitter-go && make -B
-	-cd vendor/tree-sitter-rust && make -B
-
-ts-clean:
-	-cd vendor/tree-sitter && make clean
-	-cd vendor/tree-sitter-c && make clean
-	-cd vendor/tree-sitter-python && make clean
-	-cd vendor/tree-sitter-php && make clean
-	-cd vendor/tree-sitter-go && make clean
-	-cd vendor/tree-sitter-rust && make clean
+tsbuild:
+	-$(MAKE) -C vendor/tree-sitter -B
+	-$(MAKE) -C vendor/tree-sitter-c -B
+	-$(MAKE) -C vendor/tree-sitter-python -B
+	-$(MAKE) -C vendor/tree-sitter-php -B
+	-$(MAKE) -C vendor/tree-sitter-go -B
+	-$(MAKE) -C vendor/tree-sitter-rust -B
+	-$(MAKE) -C vendor/tree-sitter-javascript -B
 
 valgrind:
 	valgrind -s --leak-check=full ./$(TARGET)
@@ -52,3 +46,10 @@ format:
 
 clean:
 	rm -f *.o $(TARGET) callgrind.out.*
+	$(MAKE) -C vendor/tree-sitter -B clean
+	$(MAKE) -C vendor/tree-sitter-c -B clean
+	$(MAKE) -C vendor/tree-sitter-python -B clean
+	$(MAKE) -C vendor/tree-sitter-php -B clean
+	$(MAKE) -C vendor/tree-sitter-go -B clean
+	$(MAKE) -C vendor/tree-sitter-rust -B clean
+	$(MAKE) -C vendor/tree-sitter-javascript -B clean
