@@ -22,7 +22,7 @@ void add_file_path(Node **head, char *file_path) {
 	*head = new;
 }
 
-void list_files_recursively(char *base_path, Node **head) {
+void list_files_recursively(char *base_path, Node **head, int max_depth, int current_depth) {
 	struct stat statbuf;
 	if (stat(base_path, &statbuf) == -1) {
 		perror("stat");
@@ -52,7 +52,9 @@ void list_files_recursively(char *base_path, Node **head) {
 
 			if (stat(path, &statbuf) != -1) {
 				if (S_ISDIR(statbuf.st_mode)) {
-					list_files_recursively(path, head);
+					if (max_depth == -1 || current_depth < max_depth) {
+						list_files_recursively(path, head, max_depth, current_depth + 1);
+					}
 				} else if (S_ISREG(statbuf.st_mode)) {
 					add_file_path(head, path);
 				}

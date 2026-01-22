@@ -1,18 +1,15 @@
 // TODO:
-//  - Add language specific filter (by default all but it can also passed
-//    with -tpy -tc -trb) which would only parse python, c and ruby files.
-//  - By default its case insensitive but with passing -cs it tells that
-//    all matching should be done in case sensitive way.
 //  - Add Levenshtein distance for matching and expose distance as arg with
 //    something like -d5 which would allow distance of 5 on a match.
-//  - Allow DEBUG to be provided as environmental variable.
-//  - Added depth flag (-r means recursive, -l2 means 2 levels deep).
 
 // FIXME:
 //  - Truncate longer argument list.
 
+#define _GNU_SOURCE
 #include <assert.h>
+#include <getopt.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,10 +23,10 @@
 #include "queries/c.h"
 #include "queries/cpp.h"
 #include "queries/go.h"
+#include "queries/javascript.h"
 #include "queries/php.h"
 #include "queries/python.h"
 #include "queries/rust.h"
-#include "queries/javascript.h"
 
 int debug_enabled = 0;
 
@@ -93,6 +90,7 @@ struct ThreadArgs {
 	const char *query_string;
 	uint32_t query_len;
 	const char *cfname;
+	int case_sensitive;
 };
 
 // void parse_source_file(const char *file_path, const char *source_code,
@@ -104,6 +102,7 @@ void parse_source_file(void *arg) {
 	const char *source_code = args->source_code;
 	TSLanguage *language = args->language;
 	const char *cfname = args->cfname;
+	int case_sensitive = args->case_sensitive;
 
 	TSParser *parser = ts_parser_new();
 	ts_parser_set_language(parser, language);
@@ -172,7 +171,13 @@ void parse_source_file(void *arg) {
 		// Substring matching.
 		// FIXME: Add Levenshtein distance.
 		if (fn.fname != NULL) {
-			char *result = strstr(fn.fname, cfname);
+			char *result;
+			if (case_sensitive) {
+				result = strstr(fn.fname, cfname);
+			} else {
+				result = strcasestr(fn.fname, cfname);
+			}
+
 			if (result != NULL) {
 				char *fparams_formatted = remove_newlines(fn.fparams);
 				printf("%s:%zu: %s %s %s\n", file_path, fn.lineno, fn.ftype ? fn.ftype : "", fn.fname, fparams_formatted ? fparams_formatted : "");
@@ -205,16 +210,38 @@ const char *get_file_extension(const char *file_path) {
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) {
-		printf("Usage: %s <search term> [directory|file]\n", argv[0]);
+	int case_sensitive = 0;
+	int max_depth = -1;
+	int opt;
+	struct option long_options[] = {
+		{"case-sensitive", no_argument, 0, 'c'},
+		{"depth", required_argument, 0, 'd'},
+		{0, 0, 0, 0}};
+
+	while ((opt = getopt_long(argc, argv, "cd:", long_options, NULL)) != -1) {
+		switch (opt) {
+		case 'c':
+			case_sensitive = 1;
+			break;
+		case 'd':
+			max_depth = atoi(optarg);
+			break;
+		default:
+			fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
+			return 1;
+		}
+	}
+
+	if (optind >= argc) {
+		fprintf(stderr, "Usage: %s [-c|--case-sensitive] [-d|--depth <level>] <search term> [directory|file]\n", argv[0]);
 		return 1;
 	}
 
-	const char *cfname = argv[1];
-	char *directory = (argc > 2) ? argv[2] : ".";
+	const char *cfname = argv[optind];
+	char *directory = (optind + 1 < argc) ? argv[optind + 1] : ".";
 
 	Node *head = NULL;
-	list_files_recursively(directory, &head);
+	list_files_recursively(directory, &head, max_depth, 0);
 	int list_size = size_of_file_list(head);
 
 	const char *debug_env = getenv("DEBUG");
@@ -289,6 +316,7 @@ int main(int argc, char *argv[]) {
 				thread_args->query_string = query_string;
 				thread_args->query_len = query_len;
 				thread_args->cfname = cfname;
+				thread_args->case_sensitive = case_sensitive;
 
 				tp_add_job(pool, (thread_func_t)parse_source_file, thread_args);
 			} else {

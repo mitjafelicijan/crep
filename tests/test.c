@@ -30,3 +30,8 @@ int main() {
     hello();
     return 0;
 }
+
+// Case sensitivity tests
+void FooBar() {}
+void foobar() {}
+void FOOBAR() {}

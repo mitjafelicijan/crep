@@ -29,6 +29,26 @@ run_test() {
     fi
 }
 
+run_test_with_flags() {
+    local label=$1
+    local flags=$2
+    local search_term=$3
+    local file=$4
+    local expected_pattern=$5
+
+    printf "Testing %-50s " "$label ($flags $search_term)"
+    output=$($CREP $flags "$search_term" "$file")
+
+    if echo "$output" | grep -q "$expected_pattern"; then
+        echo "PASSED"
+    else
+        echo "FAILED"
+        echo "  Expected pattern: $expected_pattern"
+        echo "  Actual output: $output"
+        failed=$((failed + 1))
+    fi
+}
+
 echo "Starting tests..."
 echo "----------------"
 
@@ -76,6 +96,14 @@ run_test "C++ Namespace" "my_namespace" "$TEST_DIR/test.cpp" "namespace my_names
 run_test "C++ Class" "MyClass" "$TEST_DIR/test.cpp" "class MyClass"
 run_test "C++ Struct" "MyStruct" "$TEST_DIR/test.cpp" "struct MyStruct"
 run_test "C++ Method" "myMethod" "$TEST_DIR/test.cpp" "void myMethod ()"
+
+# Case Sensitivity Tests
+run_test "Default Case Insensitive" "foo" "tests/test.c" "void FooBar"
+run_test_with_flags "Case Sensitive -c" "-c" "foobar" "tests/test.c" "void foobar"
+
+# Depth Tests
+run_test_with_flags "Depth 0 (root)" "-d 0" "level" "tests/depth_test" "void level0"
+run_test_with_flags "Depth 1 (recursive)" "-d 1" "level" "tests/depth_test" "void level1"
 
 echo "----------------"
 if [ $failed -eq 0 ]; then
