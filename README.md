@@ -5,7 +5,7 @@ structure of your code, allowing for more precise semantic searching.
 
 > [!IMPORTANT]
 > `crep` was built for fun and is not intended for real use. I made it to learn
-> Tree-sitter how searching over files works.
+> Tree-sitter andhow searching over files works.
 
 ## Features
 
